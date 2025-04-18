@@ -15,4 +15,4 @@ const Report = () => {
   );
 };
 
-export default Register;
+export default Report;
