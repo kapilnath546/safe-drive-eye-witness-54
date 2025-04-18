@@ -2,7 +2,7 @@
 import React from 'react';
 import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
-import { Shield, Camera, FileText } from "lucide-react";
+import { Shield, Camera, FileText, LayoutDashboard } from "lucide-react";
 
 const Index = () => {
   return (
@@ -33,10 +33,15 @@ const Index = () => {
             Report rash driving incidents easily and contribute to community safety. 
             Upload evidence, and let our AI help identify dangerous driving behaviors.
           </p>
-          <div className="flex space-x-4">
+          <div className="flex flex-wrap gap-4">
             <Link to="/report">
               <Button className="bg-[#0ea5e9] hover:bg-sky-600 transition-colors">
                 <Camera className="mr-2 h-5 w-5" /> Report Incident
+              </Button>
+            </Link>
+            <Link to="/dashboard">
+              <Button className="bg-[#0ea5e9] hover:bg-sky-600 transition-colors">
+                <LayoutDashboard className="mr-2 h-5 w-5" /> View Dashboard
               </Button>
             </Link>
             <Link to="/how-it-works">

@@ -10,6 +10,8 @@ import Login from "./pages/Login";
 import Register from "./pages/Register";
 import Report from "./pages/Report";
 import HowItWorks from "./pages/HowItWorks";
+import Dashboard from "./pages/Dashboard";
+import MyComplaints from "./pages/MyComplaints";
 
 const queryClient = new QueryClient();
 
@@ -25,7 +27,8 @@ const App = () => (
           <Route path="/register" element={<Register />} />
           <Route path="/report" element={<Report />} />
           <Route path="/how-it-works" element={<HowItWorks />} />
-          {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
+          <Route path="/dashboard" element={<Dashboard />} />
+          <Route path="/my-complaints" element={<MyComplaints />} />
           <Route path="*" element={<NotFound />} />
         </Routes>
       </BrowserRouter>
