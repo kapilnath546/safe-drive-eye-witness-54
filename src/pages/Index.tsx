@@ -2,9 +2,26 @@
 import React from 'react';
 import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
-import { Shield, Camera, FileText, LayoutDashboard } from "lucide-react";
+import { Shield, Camera, FileText, LayoutDashboard, LogOut } from "lucide-react";
+import { useAuth } from '../contexts/AuthContext';
+import { supabase } from '../lib/supabase';
+import { useToast } from "@/hooks/use-toast";
 
 const Index = () => {
+  const { user, isPolice } = useAuth();
+  const { toast } = useToast();
+
+  const handleLogout = async () => {
+    const { error } = await supabase.auth.signOut();
+    if (error) {
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: "Failed to log out",
+      });
+    }
+  };
+
   return (
     <div className="min-h-screen bg-gray-50 flex flex-col">
       <header className="bg-[#1a365d] text-white py-6 shadow-md">
@@ -14,12 +31,35 @@ const Index = () => {
             <h1 className="text-2xl font-bold">Rash Driving Detector</h1>
           </div>
           <nav className="space-x-4">
-            <Link to="/login" className="text-white hover:text-sky-300 transition-colors">
-              Login
-            </Link>
-            <Link to="/register" className="text-white hover:text-sky-300 transition-colors">
-              Register
-            </Link>
+            {!user ? (
+              <>
+                <Link to="/login" className="text-white hover:text-sky-300 transition-colors">
+                  Login
+                </Link>
+                <Link to="/register" className="text-white hover:text-sky-300 transition-colors">
+                  Register
+                </Link>
+              </>
+            ) : (
+              <div className="flex items-center gap-4">
+                {isPolice ? (
+                  <Link to="/police-dashboard" className="text-white hover:text-sky-300 transition-colors">
+                    Police Dashboard
+                  </Link>
+                ) : (
+                  <Link to="/my-complaints" className="text-white hover:text-sky-300 transition-colors">
+                    My Complaints
+                  </Link>
+                )}
+                <button
+                  onClick={handleLogout}
+                  className="flex items-center gap-2 text-white hover:text-sky-300 transition-colors"
+                >
+                  <LogOut className="h-5 w-5" />
+                  Logout
+                </button>
+              </div>
+            )}
           </nav>
         </div>
       </header>
