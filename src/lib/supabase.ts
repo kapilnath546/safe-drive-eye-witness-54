@@ -1,9 +1,20 @@
 
 import { createClient } from '@supabase/supabase-js';
 
-const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
-const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
+// Get Supabase URL and key from environment variables
+const supabaseUrl = import.meta.env.VITE_SUPABASE_URL || '';
+const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY || '';
 
+// Check if the URL is available and provide helpful error message
+if (!supabaseUrl) {
+  console.error('Missing VITE_SUPABASE_URL environment variable');
+}
+
+if (!supabaseAnonKey) {
+  console.error('Missing VITE_SUPABASE_ANON_KEY environment variable');
+}
+
+// Create the Supabase client
 export const supabase = createClient(supabaseUrl, supabaseAnonKey);
 
 export type Incident = {
@@ -17,4 +28,3 @@ export type Incident = {
   status: 'pending' | 'resolved';
   user_id: string;
 };
-
