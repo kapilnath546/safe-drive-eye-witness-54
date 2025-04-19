@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -9,6 +8,7 @@ import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useToast } from "@/hooks/use-toast";
+import { supabase } from '@/lib/supabase';
 
 const formSchema = z.object({
   email: z.string().email("Invalid email address"),
@@ -28,7 +28,13 @@ const Login = () => {
 
   const onSubmit = async (values: z.infer<typeof formSchema>) => {
     try {
-      // TODO: Implement Supabase login
+      const { error } = await supabase.auth.signInWithPassword({
+        email: values.email,
+        password: values.password,
+      });
+
+      if (error) throw error;
+
       toast({
         title: "Success",
         description: "Logged in successfully",
@@ -38,19 +44,23 @@ const Login = () => {
       toast({
         variant: "destructive",
         title: "Error",
-        description: "Failed to login",
+        description: error instanceof Error ? error.message : "Failed to login",
       });
     }
   };
 
   const handleGoogleLogin = async () => {
     try {
-      // TODO: Implement Supabase Google login
+      const { error } = await supabase.auth.signInWithOAuth({
+        provider: 'google',
+      });
+
+      if (error) throw error;
+
       toast({
         title: "Success",
         description: "Logged in with Google successfully",
       });
-      navigate("/");
     } catch (error) {
       toast({
         variant: "destructive",

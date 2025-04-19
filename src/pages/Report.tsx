@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -11,12 +10,11 @@ import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useToast } from "@/hooks/use-toast";
 import { Calendar } from "@/components/ui/calendar";
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from "@/components/ui/popover";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { cn } from "@/lib/utils";
+import { supabase } from '@/lib/supabase';
+import { useNavigate } from 'react-router-dom';
+import { useAuth } from '@/contexts/AuthContext';
 
 const formSchema = z.object({
   vehicleNumber: z.string()
@@ -28,6 +26,8 @@ const formSchema = z.object({
 
 const Report = () => {
   const { toast } = useToast();
+  const navigate = useNavigate();
+  const { user } = useAuth();
   const [media, setMedia] = useState<File | null>(null);
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -65,17 +65,55 @@ const Report = () => {
   };
 
   const onSubmit = async (values: z.infer<typeof formSchema>) => {
+    if (!user) {
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: "Please login to report an incident",
+      });
+      navigate('/login');
+      return;
+    }
+
     try {
-      // TODO: Implement Supabase storage upload and database insert
+      let mediaUrl = '';
+      
+      if (media) {
+        const fileExt = media.name.split('.').pop();
+        const fileName = `${Math.random()}.${fileExt}`;
+        const filePath = `${user.id}/${fileName}`;
+
+        const { error: uploadError, data } = await supabase.storage
+          .from('incident-media')
+          .upload(filePath, media);
+
+        if (uploadError) throw uploadError;
+        mediaUrl = data.path;
+      }
+
+      const { error } = await supabase
+        .from('incidents')
+        .insert({
+          vehicle_number: values.vehicleNumber,
+          location: values.address,
+          incident_date: values.datetime.toISOString(),
+          media_url: mediaUrl,
+          status: 'pending',
+          user_id: user.id,
+        });
+
+      if (error) throw error;
+
       toast({
         title: "Success",
         description: "Incident reported successfully",
       });
+      navigate('/my-complaints');
     } catch (error) {
       toast({
         variant: "destructive",
         title: "Error",
-        description: "Failed to report incident",
+        description: error instanceof Error ? error.message : "Failed to report incident",
       });
     }
   };

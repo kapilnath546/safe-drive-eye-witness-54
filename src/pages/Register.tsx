@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -9,6 +8,7 @@ import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useToast } from "@/hooks/use-toast";
+import { supabase } from '@/lib/supabase';
 
 const formSchema = z.object({
   name: z.string().min(2, "Name must be at least 2 characters"),
@@ -30,29 +30,44 @@ const Register = () => {
 
   const onSubmit = async (values: z.infer<typeof formSchema>) => {
     try {
-      // TODO: Implement Supabase registration
+      const { error } = await supabase.auth.signUp({
+        email: values.email,
+        password: values.password,
+        options: {
+          data: {
+            full_name: values.name,
+          },
+        },
+      });
+
+      if (error) throw error;
+
       toast({
         title: "Success",
-        description: "Registered successfully",
+        description: "Registration successful! Please check your email to verify your account.",
       });
       navigate("/login");
     } catch (error) {
       toast({
         variant: "destructive",
         title: "Error",
-        description: "Failed to register",
+        description: error instanceof Error ? error.message : "Failed to register",
       });
     }
   };
 
   const handleGoogleRegister = async () => {
     try {
-      // TODO: Implement Supabase Google registration
+      const { error } = await supabase.auth.signInWithOAuth({
+        provider: 'google',
+      });
+
+      if (error) throw error;
+
       toast({
         title: "Success",
         description: "Registered with Google successfully",
       });
-      navigate("/");
     } catch (error) {
       toast({
         variant: "destructive",
