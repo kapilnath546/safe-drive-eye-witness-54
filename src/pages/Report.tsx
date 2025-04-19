@@ -84,7 +84,11 @@ const Report = () => {
           .from('incident-media')
           .upload(filePath, media);
 
-        if (uploadResult.error) throw uploadResult.error;
+        if (uploadResult.error) {
+          throw uploadResult.error;
+        }
+        
+        // Fixed line - now safely accessing data property after error check
         mediaUrl = uploadResult.data?.path || '';
       }
 
