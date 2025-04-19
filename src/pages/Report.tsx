@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -83,12 +84,13 @@ const Report = () => {
         const fileName = `${Math.random()}.${fileExt}`;
         const filePath = `${user.id}/${fileName}`;
 
-        const { error: uploadError, data } = await supabase.storage
+        const uploadResult = await supabase.storage
           .from('incident-media')
           .upload(filePath, media);
 
-        if (uploadError) throw uploadError;
-        mediaUrl = data.path;
+        if (uploadResult.error) throw uploadResult.error;
+        // Fix: Using optional chaining to safely access data path
+        mediaUrl = uploadResult.data?.path || '';
       }
 
       const { error } = await supabase
