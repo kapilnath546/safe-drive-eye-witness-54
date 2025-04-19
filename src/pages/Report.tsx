@@ -3,26 +3,21 @@ import React, { useState } from 'react';
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { CalendarIcon, MapPin, Upload } from "lucide-react";
+import { UploadCloud, AlertTriangle } from "lucide-react";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { useForm } from "react-hook-form";
-import { format } from "date-fns";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useToast } from "@/hooks/use-toast";
-import { Calendar } from "@/components/ui/calendar";
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { cn } from "@/lib/utils";
 import { supabase } from '@/lib/supabase';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 
 const formSchema = z.object({
   vehicleNumber: z.string()
-    .regex(/^[A-Z]{2}[0-9]{2}[A-Z]{2}[0-9]{4}$/, "Invalid vehicle number format (e.g., KA01AB1234)"),
-  address: z.string().min(10, "Address must be at least 10 characters"),
-  datetime: z.date(),
-  media: z.any().optional(),
+    .regex(/^[A-Z]{2}[0-9]{2}[A-Z]{2}[0-9]{4}$/, "Invalid vehicle number format (e.g., TN22BB0001)"),
+  address: z.string().min(10, "Location details must be at least 10 characters"),
+  additionalInfo: z.string().optional(),
 });
 
 const Report = () => {
@@ -30,12 +25,13 @@ const Report = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
   const [media, setMedia] = useState<File | null>(null);
+
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
       vehicleNumber: "",
       address: "",
-      datetime: new Date(),
+      additionalInfo: "",
     },
   });
 
@@ -89,7 +85,6 @@ const Report = () => {
           .upload(filePath, media);
 
         if (uploadResult.error) throw uploadResult.error;
-        // Fix: Using optional chaining to safely access data path
         mediaUrl = uploadResult.data?.path || '';
       }
 
@@ -98,8 +93,8 @@ const Report = () => {
         .insert({
           vehicle_number: values.vehicleNumber,
           location: values.address,
-          incident_date: values.datetime.toISOString(),
           media_url: mediaUrl,
+          additional_info: values.additionalInfo,
           status: 'pending',
           user_id: user.id,
         });
@@ -121,24 +116,48 @@ const Report = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 py-12 px-4">
-      <div className="max-w-2xl mx-auto bg-white shadow-md rounded-lg p-8">
-        <h2 className="text-2xl font-bold text-[#1a365d] mb-6">
-          Report a Rash Driving Incident
-        </h2>
+    <div className="min-h-screen bg-[#f4fdf4] py-12 px-4">
+      <div className="max-w-4xl mx-auto">
+        <h1 className="text-4xl font-bold mb-2 text-gray-900">Complaint Quick Form</h1>
+        
+        {/* Instructions Box */}
+        <div className="bg-white rounded-lg p-6 shadow-md mb-8 border border-gray-200">
+          <div className="mb-4">
+            <div className="bg-gray-100 p-4 rounded-md inline-block mb-4">
+              <h3 className="text-xl font-bold mb-2">TN 22 BB 0001</h3>
+            </div>
+          </div>
+          
+          <div className="space-y-2">
+            <h3 className="font-semibold text-red-600 flex items-center gap-2">
+              📋 How to File a Report:
+            </h3>
+            <ol className="list-decimal ml-5 space-y-2">
+              <li>Enter the vehicle number of the offender (e.g., TN 22 BB 0001)</li>
+              <li>Add the locality where the incident happened</li>
+              <li>Upload photo/video evidence if available</li>
+              <li>(Optional) Add a short message describing the incident</li>
+            </ol>
+            <div className="mt-4 text-red-600 flex items-center gap-2">
+              <AlertTriangle className="h-5 w-5" />
+              <span>Misuse of the platform may lead to account suspension or legal action.</span>
+            </div>
+          </div>
+        </div>
+
         <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6 bg-white rounded-lg p-6 shadow-md">
             <FormField
               control={form.control}
               name="vehicleNumber"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Vehicle Registration Number</FormLabel>
+                  <FormLabel className="text-lg font-semibold">Vehicle Number Plate</FormLabel>
                   <FormControl>
                     <Input 
                       {...field}
-                      placeholder="Enter vehicle number (e.g., KA01AB1234)"
-                      className="uppercase"
+                      placeholder="Enter vehicle number (e.g., TN22BB0001)"
+                      className="h-12 text-lg uppercase"
                     />
                   </FormControl>
                   <FormMessage />
@@ -151,65 +170,22 @@ const Report = () => {
               name="address"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Incident Address</FormLabel>
+                  <FormLabel className="text-lg font-semibold">Locality</FormLabel>
                   <FormControl>
-                    <div className="relative">
-                      <MapPin className="absolute left-3 top-3 h-5 w-5 text-gray-400" />
-                      <Textarea 
-                        {...field}
-                        placeholder="Enter the location of the incident"
-                        className="pl-10 min-h-[100px]"
-                      />
-                    </div>
+                    <Textarea 
+                      {...field}
+                      placeholder="Enter the location of the incident"
+                      className="min-h-[80px] text-base"
+                    />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
               )}
             />
 
-            <FormField
-              control={form.control}
-              name="datetime"
-              render={({ field }) => (
-                <FormItem className="flex flex-col">
-                  <FormLabel>Incident Date & Time</FormLabel>
-                  <Popover>
-                    <PopoverTrigger asChild>
-                      <FormControl>
-                        <Button
-                          variant="outline"
-                          className={cn(
-                            "w-full pl-3 text-left font-normal",
-                            !field.value && "text-muted-foreground"
-                          )}
-                        >
-                          {field.value ? (
-                            format(field.value, "PPP HH:mm")
-                          ) : (
-                            <span>Pick a date</span>
-                          )}
-                          <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
-                        </Button>
-                      </FormControl>
-                    </PopoverTrigger>
-                    <PopoverContent className="w-auto p-0" align="start">
-                      <Calendar
-                        mode="single"
-                        selected={field.value}
-                        onSelect={field.onChange}
-                        initialFocus
-                        className={cn("p-3 pointer-events-auto")}
-                      />
-                    </PopoverContent>
-                  </Popover>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-
             <div className="space-y-4">
-              <FormLabel>Upload Media</FormLabel>
-              <div className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center">
+              <FormLabel className="text-lg font-semibold">Upload Photo/Video</FormLabel>
+              <div className="border-2 border-dashed border-gray-300 rounded-lg p-8">
                 <input
                   type="file"
                   accept=".jpg,.jpeg,.png,.mp4,.webm"
@@ -221,10 +197,8 @@ const Report = () => {
                   htmlFor="media-upload"
                   className="cursor-pointer flex flex-col items-center space-y-2"
                 >
-                  <Upload className="h-8 w-8 text-gray-400" />
-                  <span className="text-sm text-gray-500">
-                    Click to upload image/video (max 50MB)
-                  </span>
+                  <UploadCloud className="h-10 w-10 text-gray-400" />
+                  <span className="text-gray-500">(Drop and share)</span>
                   {media && (
                     <span className="text-sm text-green-600">
                       Selected: {media.name}
@@ -234,8 +208,29 @@ const Report = () => {
               </div>
             </div>
 
-            <Button type="submit" className="w-full bg-[#0ea5e9] hover:bg-sky-600">
-              Submit Report
+            <FormField
+              control={form.control}
+              name="additionalInfo"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel className="text-lg font-semibold">Additional Message (Optional)</FormLabel>
+                  <FormControl>
+                    <Textarea 
+                      {...field}
+                      placeholder="Add any additional details about the incident"
+                      className="min-h-[100px] text-base"
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <Button 
+              type="submit" 
+              className="w-full bg-red-600 hover:bg-red-700 text-white py-6 text-lg"
+            >
+              Submit Complaint
             </Button>
           </form>
         </Form>
