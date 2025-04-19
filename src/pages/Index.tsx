@@ -3,23 +3,34 @@ import React from 'react';
 import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
 import { Shield, Camera, FileText, LayoutDashboard } from "lucide-react";
+import { useAuth } from '@/contexts/AuthContext';
 
 const Index = () => {
+  const { user } = useAuth();
+
   return (
     <div className="min-h-screen bg-gray-50 flex flex-col">
-      <header className="bg-[#1a365d] text-white py-6 shadow-md">
+      <header className="bg-red-600 text-white py-6 shadow-md">
         <div className="container mx-auto px-4 flex justify-between items-center">
           <div className="flex items-center space-x-3">
-            <Shield className="h-8 w-8 text-sky-400" />
+            <Shield className="h-8 w-8 text-white" />
             <h1 className="text-2xl font-bold">Rash Driving Detector</h1>
           </div>
           <nav className="space-x-4">
-            <Link to="/login" className="text-white hover:text-sky-300 transition-colors">
-              Login
-            </Link>
-            <Link to="/register" className="text-white hover:text-sky-300 transition-colors">
-              Register
-            </Link>
+            {!user ? (
+              <>
+                <Link to="/login" className="text-white hover:text-gray-200 transition-colors">
+                  Login
+                </Link>
+                <Link to="/register" className="text-white hover:text-gray-200 transition-colors">
+                  Register
+                </Link>
+              </>
+            ) : (
+              <Link to="/dashboard" className="text-white hover:text-gray-200 transition-colors">
+                Dashboard
+              </Link>
+            )}
           </nav>
         </div>
       </header>
